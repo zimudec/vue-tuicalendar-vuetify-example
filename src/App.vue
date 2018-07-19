@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <v-app>
     <Schedule/>
-  </div>
+  </v-app>
 </template>
 
 <script>
@@ -15,3 +15,14 @@ export default {
   }
 }
 </script>
+<style>
+  .v-btn{
+    text-transform: initial;
+    font-weight: normal;
+  }
+  .wf-loading, .wf-materialicons-n4-inactive {
+    .material-icons {
+      display: none;
+    }
+  }
+</style>

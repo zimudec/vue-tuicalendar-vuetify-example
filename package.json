@@ -1,7 +1,7 @@
 {
-  "name": "vue-tuicalendar-bootstrap-example",
+  "name": "vue-tuicalendar-vuetify-example",
   "version": "0.1.0",
-  "description": "Vue.js with Bootstrap, Tui Calendar + Extras example project",
+  "description": "Vue.js with Vuetify, Tui Calendar + Extras example project",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -9,22 +9,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zimudec/vue-tuicalendar-bootstrap-example.github.io.git"
+    "url": "git+https://github.com/zimudec/vue-tuicalendar-vuetify-example.github.io.git"
   },
   "author": "Héctor pavez",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zimudec/vue-tuicalendar-bootstrap-example/issues"
+    "url": "https://github.com/zimudec/vue-tuicalendar-vuetify-example/issues"
   },
-  "homepage": "https://github.com/zimudec/vue-tuicalendar-bootstrap-example#readme",
+  "homepage": "https://github.com/zimudec/vue-tuicalendar-vuetify-example#readme",
   "dependencies": {
     "chance": "1.0.16",
-    "moment": "2.22.2",
+    "moment-timezone": "^0.5.21",
     "tui-calendar": "1.4.0",
-    "tui-date-picker": "3.0.0",
-    "tui-time-picker": "1.4.0",
     "vue": "^2.5.16",
-    "jquery": "3.2.1"
+    "vuetify": "^1.0.19",
+    "jquery": "^1.11.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.0-beta.15",

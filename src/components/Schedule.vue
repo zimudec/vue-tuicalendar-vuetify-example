@@ -1,5 +1,89 @@
 <template>
   <div>
+    <v-dialog v-model="modalDetail" persistent max-width="500px">
+
+      <v-card>
+        <v-card-text>
+          <v-list
+          dense
+          >
+            <v-list-tile>{{ editionDateFormatted }}</v-list-tile>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" flat @click.stop="modalDetail = false">Cancel</v-btn>
+          <v-btn color="blue darken-1" flat @click.stop="scheduleEdit">Edit</v-btn>
+          <v-btn color="blue darken-1" flat @click.stop="scheduleDelete">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="modalEdit" persistent max-width="500px">
+      <v-card>
+        <v-card-text>
+          <v-container grid-list-md>
+            <v-layout wrap>
+              <v-menu
+                ref="datePickerMenu"
+                :close-on-content-click="false"
+                v-model="editionData.date.menu"
+                :nudge-right="40"
+                :return-value.sync="editionData.date.val"
+                lazy
+                transition="scale-transition"
+                offset-y
+                full-width
+                min-width="290px"
+              >
+                <v-text-field
+                  slot="activator"
+                  v-model="editionDateFormatted"
+                  label="Date"
+                  prepend-icon="event"
+                  readonly
+                ></v-text-field>
+                <v-date-picker v-model="editionData.date.val" @input="$refs.datePickerMenu.save(editionData.date.val)"></v-date-picker>
+              </v-menu>
+
+              <v-menu
+                ref="timePickerMenu"
+                :close-on-content-click="false"
+                v-model="editionData.time.menu"
+                :nudge-right="40"
+                :return-value.sync="editionData.time.val"
+                lazy
+                transition="scale-transition"
+                offset-y
+                full-width
+                max-width="290px"
+                min-width="290px"
+              >
+                <v-text-field
+                  slot="activator"
+                  v-model="editionData.time.val"
+                  label="Time"
+                  prepend-icon="access_time"
+                  readonly
+                ></v-text-field>
+                <v-time-picker
+                  v-if="editionData.time.menu"
+                  v-model="editionData.time.val"
+                  @change="$refs.timePickerMenu.save(editionData.time.val)"
+                ></v-time-picker>
+              </v-menu>
+            </v-layout>
+          </v-container>
+          <small>*Required fields</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" flat @click.stop="modalEdit = false">Close</v-btn>
+          <v-btn color="blue darken-1" flat @click.stop="scheduleSave">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <div id="top">
         <a href="https://github.com/nhnent/tui.calendar">
             <img src="../assets/images/img-bi.png" srcset="../assets/images/img-bi@2x.png 2x,../assets/images/img-bi@3x.png 3x">
@@ -27,99 +111,238 @@
             © NHN Entertainment Corp.
         </div>
     </div>
-    <div id="right">
-      <div id="menu">
-        <span class="dropdown">
-            <button id="dropdownMenu-calendarType" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="true">
-                <i id="calendarTypeIcon" class="calendar-icon ic_view_month" style="margin-right: 4px;"></i>
-                <span id="calendarTypeName">Dropdown</span>&nbsp;
-                <i class="calendar-icon tui-full-calendar-dropdown-arrow"></i>
-            </button>
-            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu-calendarType">
-                <li role="presentation">
-                    <a class="dropdown-menu-title" role="menuitem" data-action="toggle-daily">
-                        <i class="calendar-icon ic_view_day"></i>Daily
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weekly">
-                        <i class="calendar-icon ic_view_week"></i>Weekly
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a class="dropdown-menu-title" role="menuitem" data-action="toggle-monthly">
-                        <i class="calendar-icon ic_view_month"></i>Month
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weeks2">
-                        <i class="calendar-icon ic_view_week"></i>2 weeks
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a class="dropdown-menu-title" role="menuitem" data-action="toggle-weeks3">
-                        <i class="calendar-icon ic_view_week"></i>3 weeks
-                    </a>
-                </li>
-                <li role="presentation" class="dropdown-divider"></li>
-                <li role="presentation">
-                    <a role="menuitem" data-action="toggle-workweek">
-                        <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-workweek" checked>
-                        <span class="checkbox-title"></span>Show weekends
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a role="menuitem" data-action="toggle-start-day-1">
-                        <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-start-day-1">
-                        <span class="checkbox-title"></span>Start Week on Monday
-                    </a>
-                </li>
-                <li role="presentation">
-                    <a role="menuitem" data-action="toggle-narrow-weekend">
-                        <input type="checkbox" class="tui-full-calendar-checkbox-square" value="toggle-narrow-weekend">
-                        <span class="checkbox-title"></span>Narrower than weekdays
-                    </a>
-                </li>
-            </ul>
-        </span>
-        <span id="menu-navi">
-            <button type="button" class="btn btn-default btn-sm move-today" data-action="move-today">Today</button>
-            <button type="button" class="btn btn-default btn-sm move-day" data-action="move-prev">
-                <i class="calendar-icon ic-arrow-line-left" data-action="move-prev"></i>
-            </button>
-            <button type="button" class="btn btn-default btn-sm move-day" data-action="move-next">
-                <i class="calendar-icon ic-arrow-line-right" data-action="move-next"></i>
-            </button>
-        </span>
-        <span id="renderRange" class="render-range"></span>
-      </div>
-      <div id="calendar"></div>
-    </div>
-  </div>
+	<div id="right">
+	    <v-menu
+	      v-model="menu"
+	      :close-on-content-click="false"
+	      :nudge-width="200"
+	      offset-y
+	      transition=false
+	    >
+	      <v-btn
+	        slot="activator"
+	        small
+	        round
+	        outline
+	        flat
+	      >
+	        <v-icon small left color="black" id="calendarTypeIcon">view_day</v-icon>
+	        <span  id="calendarTypeName">Daily</span>
+	        <v-icon small right>keyboard_arrow_down</v-icon>
+	      </v-btn>
+
+	      <v-card>
+	        <v-list
+	        dense
+	        id="dropdown_menu"
+	        >
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-daily">
+	            <v-list-tile-action>
+	              <v-icon small color="black">view_day</v-icon>
+	            </v-list-tile-action>
+	            <v-list-tile-title>Daily</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-weekly">
+	            <v-list-tile-action>
+	              <v-icon small color="black">view_week</v-icon>
+	            </v-list-tile-action>
+	            <v-list-tile-title>Weekly</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-monthly">
+	            <v-list-tile-action>
+	              <v-icon small color="black">view_module</v-icon>
+	            </v-list-tile-action>
+	            <v-list-tile-title>Month</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-weeks2">
+	            <v-list-tile-action>
+	              <v-icon small color="black">view_week</v-icon>
+	            </v-list-tile-action>
+	            <v-list-tile-title>2 weeks</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-weeks3">
+	            <v-list-tile-action>
+	              <v-icon small color="black">view_week</v-icon>
+	            </v-list-tile-action>
+	            <v-list-tile-title>3 weeks</v-list-tile-title>
+	          </v-list-tile>
+	          
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-workweek">
+	            <v-list-tile-action>
+	              <v-checkbox v-model="showWeekends"></v-checkbox>
+	            </v-list-tile-action>
+	            <v-list-tile-title @click.prevent="showWeekends = !showWeekends" >Show weekends</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-start-day-1">
+	            <v-list-tile-action>
+	              <v-checkbox v-model="startDay"></v-checkbox>
+	            </v-list-tile-action>
+	            <v-list-tile-title @click.prevent="startDay = !startDay" >Start Week on Monday</v-list-tile-title>
+	          </v-list-tile>
+
+	          <v-list-tile @click="" role="menuitem" data-action="toggle-narrow-weekend">
+	            <v-list-tile-action>
+	              <v-checkbox v-model="narrowWeekend"></v-checkbox>
+	            </v-list-tile-action>
+	            <v-list-tile-title @click.prevent="narrowWeekend = !narrowWeekend" >Narrower than weekdays</v-list-tile-title>
+	          </v-list-tile>
+
+	        </v-list>
+	      </v-card>
+	    </v-menu>
+
+	    <span id="menu-navi">
+	      <v-btn
+	          small
+	          round
+	          outline
+	          flat
+	          data-action="move-today"
+	        >
+	          Today
+	      </v-btn>
+
+	      <v-btn
+	          small
+	          round
+	          outline
+	          icon
+	          data-action="move-prev"
+	        >
+	        <v-icon data-action="move-prev">keyboard_arrow_left</v-icon>
+	      </v-btn>
+
+	      <v-btn
+	          small
+	          round
+	          outline
+	          icon
+	          data-action="move-next"
+	        >
+	        <v-icon data-action="move-next">keyboard_arrow_right</v-icon>
+	      </v-btn>
+	    </span>
+
+	    <span id="renderRange" class="render-range"></span>
+
+	    <div id="calendar"></div>
+	  </div>
+	</div>
 </template>
 
 <script>
-import '../css/bootstrap.css';
-import 'tui-time-picker/dist/tui-time-picker.css';
-import 'tui-date-picker/dist/tui-date-picker.css';
 import 'tui-calendar/dist/tui-calendar.min.css';
 import '../css/default.css';
 import '../css/icons.css';
 
-import '../js/bootstrap.min';
-//import 'tui-code-snippet';
-import 'tui-time-picker'
-import 'tui-date-picker'
-import moment from 'moment'
+import moment from 'moment-timezone'
 import 'chance'
 import Calendar from 'tui-calendar'
 
 export default {
   name: 'Schedule',
+  data: function () {
+    return {
+      modalDetail: false,
+      modalEdit: false,
+
+      // Menu header
+      menu: false,
+
+      // View modes
+      showWeekends: true,
+      startDay: true,
+      narrowWeekend: false,
+
+      // Popup Edition
+      editionData: {
+        schedule: null,
+        date: {
+          menu: false, // Show date selector menu
+          val: null // Value
+        },
+        time: {
+          menu: false, // Show time selector menu
+          val: null // Value
+        }
+      },
+      guide: null,
+
+    }
+  },
+  computed: {
+    editionDateFormatted () {
+      return this.editionData.date.val ? moment(this.editionData.date.val).format('DD/MM/YYYY'): ''
+    },
+    datePickerFormatted () {
+      return this.editionData.date.val ? moment(this.editionData.date.val).format('YYYY-MM-DD'): ''
+    }
+  },
+  methods: {
+    scheduleEditClear: function () {
+      this.editionData = {
+        schedule: null,
+        calendarId: '',
+        id: '',
+        date: {
+          menu: false, // Show date selector menu
+          val: null // Value
+        },
+        time: {
+          menu: false, // Show time selector menu
+          val: null // Value
+        }
+      }
+    },
+    scheduleEdit: function(){
+      // Open edition popup
+      this.modalEdit = true;
+
+      // Close details popup
+      this.modalDetail = false;
+    },
+    scheduleDelete: function(){
+
+      // Confirm
+      let confirm = window.confirm('Are you sure you want to delete it?');
+      if(confirm){
+        // Delete turn
+        window.cal.deleteSchedule(this.editionData.schedule.id, this.editionData.schedule.calendarId);
+
+        // Close details popup
+        this.modalDetail = false;
+      }
+    },
+    scheduleSave: function () {
+
+      // It is new?
+      console.log('this.editionData.schedule: ', this.editionData.schedule);
+      this.editionData.schedule.start = this.editionData.date.val + ' ' + this.editionData.time.val;
+      this.editionData.schedule.end = this.editionData.date.val + ' ' + this.editionData.time.val;
+
+      if (!this.editionData.schedule.id) {
+        this.editionData.schedule.id = +new Date();
+        console.log('creando...', this.editionData.schedule);
+        window.cal.createSchedules([this.editionData.schedule]);
+        this.guide.clearGuideElement();
+      }else {
+        console.log('actualizando...', this.editionData);
+        window.cal.updateSchedule(this.editionData.schedule.id, this.editionData.schedule.calendarId, this.editionData.schedule);
+      }
+
+      this.modalEdit = false;
+    },
+  },
   mounted: function () {
 
     var CalendarList = [];
+    var self = this;
 
     function CalendarInfo() {
         this.id = null;
@@ -243,7 +466,7 @@ export default {
     })();
 
 
-    /**/
+
 
     var ScheduleList = [];
 
@@ -378,403 +601,489 @@ export default {
     }
 
 
-    /**/
+    var cal, resizeThrottled;
+    var useCreationPopup = false;
+    var useDetailPopup = false;
+    var datePicker, selectedCalendar;
 
-      var cal, resizeThrottled;
-      var useCreationPopup = true;
-      var useDetailPopup = true;
-      var datePicker, selectedCalendar;
+    cal = new Calendar('#calendar', {
+        defaultView: 'month',
+        useCreationPopup: useCreationPopup,
+        useDetailPopup: useDetailPopup,
+        calendars: CalendarList,
+        template: {
+            milestone: function(model) {
+                return '<span class="calendar-font-icon ic-milestone-b"></span> <span style="background-color: ' + model.bgColor + '">' + model.title + '</span>';
+            },
+            allday: function(schedule) {
+                return getTimeTemplate(schedule, true);
+            },
+            time: function(schedule) {
+                return getTimeTemplate(schedule, false);
+            }
+        }
+    });
 
-      cal = new Calendar('#calendar', {
-          defaultView: 'month',
-          useCreationPopup: useCreationPopup,
-          useDetailPopup: useDetailPopup,
-          calendars: CalendarList,
-          template: {
-              milestone: function(model) {
-                  return '<span class="calendar-font-icon ic-milestone-b"></span> <span style="background-color: ' + model.bgColor + '">' + model.title + '</span>';
+    function yyyymmdd(dateIn) {
+      var yyyy = dateIn.getFullYear();
+      var mm = dateIn.getMonth()+1; // getMonth() is zero-based
+      var dd  = dateIn.getDate();
+      return String(10000*yyyy + 100*mm + dd); // Leading zeros for mm and dd
+    }
+
+
+    // event handlers
+    cal.on({
+        'clickSchedule': function(e) {
+
+            // Fill popup with info
+            self.editionData = Object.assign(self.editionData, {
+              schedule: e.schedule,
+              calendarId: e.schedule.calendarId,
+              id: e.schedule.id,
+              date: {
+                menu: false,
+                val: moment(e.schedule.start.getTime()).format('YYYY-MM-DD')
               },
-              allday: function(schedule) {
-                  return getTimeTemplate(schedule, true);
+              time: {
+                menu: false,
+                val: moment(e.schedule.start.getTime()).format('HH:mm')
               },
-              time: function(schedule) {
-                  return getTimeTemplate(schedule, false);
-              }
-          }
-      });
+            });
 
-      // event handlers
-      cal.on({
-          'clickSchedule': function(e) {
-              console.log('clickSchedule', e);
-          },
-          'clickDayname': function(date) {
-              console.log('clickDayname', date);
-          },
-          'beforeCreateSchedule': function(e) {
-              console.log('beforeCreateSchedule', e);
-              saveNewSchedule(e);
-          },
-          'beforeUpdateSchedule': function(e) {
-              console.log('beforeUpdateSchedule', e);
-              e.schedule.start = e.start;
-              e.schedule.end = e.end;
-              cal.updateSchedule(e.schedule.id, e.schedule.calendarId, e.schedule);
-          },
-          'beforeDeleteSchedule': function(e) {
-              console.log('beforeDeleteSchedule', e);
-              cal.deleteSchedule(e.schedule.id, e.schedule.calendarId);
-          },
-          'afterRenderSchedule': function(e) {
-              var schedule = e.schedule;
-              // var element = cal.getElement(schedule.id, schedule.calendarId);
-              // console.log('afterRenderSchedule', element);
-          }
-      });
+            // Show details popup
+            self.modalDetail = true;
 
-      /**
-       * Get time template for time and all-day
-       * @param {Schedule} schedule - schedule
-       * @param {boolean} isAllDay - isAllDay or hasMultiDates
-       * @returns {string}
-       */
-      function getTimeTemplate(schedule, isAllDay) {
-          var html = [];
-          var start = moment(schedule.start.toUTCString());
-          if (!isAllDay) {
-              html.push('<strong>' + start.format('HH:mm') + '</strong> ');
-          }
-          if (schedule.isPrivate) {
-              html.push('<span class="calendar-font-icon ic-lock-b"></span>');
-              html.push(' Private');
-          } else {
-              if (schedule.isReadOnly) {
-                  html.push('<span class="calendar-font-icon ic-readonly-b"></span>');
-              } else if (schedule.recurrenceRule) {
-                  html.push('<span class="calendar-font-icon ic-repeat-b"></span>');
-              } else if (schedule.attendees.length) {
-                  html.push('<span class="calendar-font-icon ic-user-b"></span>');
-              } else if (schedule.location) {
-                  html.push('<span class="calendar-font-icon ic-location-b"></span>');
-              }
-              html.push(' ' + schedule.title);
-          }
 
-          return html.join('');
-      }
+            /* step1. open custom detail popup */
+            /*const willModify = confirm(`title: ${e.schedule.title}\n when: ${yyyymmdd(new Date(e.schedule.start))} \nWill you update schedule?`);
 
-      /**
-       * A listener for click the menu
-       * @param {Event} e - click event
-       */
-      function onClickMenu(e) {
-          var target = $(e.target).closest('a[role="menuitem"]')[0];
-          var action = getDataAction(target);
-          var options = cal.getOptions();
-          var viewName = '';
+            if (willModify) { // step1-1. open edit popup
+                e.schedule.title = prompt('Schedule', e.schedule.title);
+                cal.updateSchedule(e.schedule.id, e.schedule.calendarId, e.schedule);
+            }*/
+        },
+        'clickDayname': function(date) {
+            console.log('clickDayname', date);
+        },
+        'beforeCreateSchedule': function(e) {
+            console.log('beforeCreateSchedule', e);
 
-          console.log(target);
-          console.log(action);
-          switch (action) {
-              case 'toggle-daily':
-                  viewName = 'day';
-                  break;
-              case 'toggle-weekly':
-                  viewName = 'week';
-                  break;
-              case 'toggle-monthly':
-                  options.month.visibleWeeksCount = 0;
-                  viewName = 'month';
-                  break;
-              case 'toggle-weeks2':
-                  options.month.visibleWeeksCount = 2;
-                  viewName = 'month';
-                  break;
-              case 'toggle-weeks3':
-                  options.month.visibleWeeksCount = 3;
-                  viewName = 'month';
-                  break;
-              case 'toggle-narrow-weekend':
-                  options.month.narrowWeekend = !options.month.narrowWeekend;
-                  options.week.narrowWeekend = !options.week.narrowWeekend;
-                  viewName = cal.getViewName();
+            self.scheduleEditClear();
 
-                  target.querySelector('input').checked = options.month.narrowWeekend;
-                  break;
-              case 'toggle-start-day-1':
-                  options.month.startDayOfWeek = options.month.startDayOfWeek ? 0 : 1;
-                  options.week.startDayOfWeek = options.week.startDayOfWeek ? 0 : 1;
-                  viewName = cal.getViewName();
-
-                  target.querySelector('input').checked = options.month.startDayOfWeek;
-                  break;
-              case 'toggle-workweek':
-                  options.month.workweek = !options.month.workweek;
-                  options.week.workweek = !options.week.workweek;
-                  viewName = cal.getViewName();
-
-                  target.querySelector('input').checked = !options.month.workweek;
-                  break;
-              default:
-                  break;
-          }
-
-          cal.setOptions(options, true);
-          cal.changeView(viewName, true);
-
-          setDropdownCalendarType();
-          setRenderRangeText();
-          setSchedules();
-      }
-
-      function onClickNavi(e) {
-          var action = getDataAction(e.target);
-
-          switch (action) {
-              case 'move-prev':
-                  cal.prev();
-                  break;
-              case 'move-next':
-                  cal.next();
-                  break;
-              case 'move-today':
-                  cal.today();
-                  break;
-              default:
-                  return;
-          }
-
-          setRenderRangeText();
-          setSchedules();
-      }
-
-      function onNewSchedule() {
-          var title = $('#new-schedule-title').val();
-          var location = $('#new-schedule-location').val();
-          var isAllDay = document.getElementById('new-schedule-allday').checked;
-          var start = datePicker.getStartDate();
-          var end = datePicker.getEndDate();
-          var calendar = selectedCalendar ? selectedCalendar : CalendarList[0];
-
-          if (!title) {
-              return;
-          }
-
-          cal.createSchedules([{
-              id: String(chance.guid()),
-              calendarId: calendar.id,
-              title: title,
-              isAllDay: isAllDay,
-              start: start,
-              end: end,
-              category: isAllDay ? 'allday' : 'time',
-              dueDateClass: '',
-              color: calendar.color,
-              bgColor: calendar.bgColor,
-              dragBgColor: calendar.bgColor,
-              borderColor: calendar.borderColor,
-              raw: {
-                  location: location
+            // Fill popup with info
+            self.editionData = Object.assign(self.editionData, {
+              schedule: {
+                title: '',
+                isAllDay: false,
+                start: e.start,
+                end: e.end,
+                category:  'time'
               },
-              state: 'Busy'
-          }]);
-
-          $('#modal-new-schedule').modal('hide');
-      }
-
-      function onChangeNewScheduleCalendar(e) {
-          var target = $(e.target).closest('a[role="menuitem"]')[0];
-          var calendarId = getDataAction(target);
-          changeNewScheduleCalendar(calendarId);
-      }
-
-      function changeNewScheduleCalendar(calendarId) {
-          var calendarNameElement = document.getElementById('calendarName');
-          var calendar = findCalendar(calendarId);
-          var html = [];
-
-          html.push('<span class="calendar-bar" style="background-color: ' + calendar.bgColor + '; border-color:' + calendar.borderColor + ';"></span>');
-          html.push('<span class="calendar-name">' + calendar.name + '</span>');
-
-          calendarNameElement.innerHTML = html.join('');
-
-          selectedCalendar = calendar;
-      }
-
-      function createNewSchedule(event) {
-          var start = event.start ? new Date(event.start.getTime()) : new Date();
-          var end = event.end ? new Date(event.end.getTime()) : moment().add(1, 'hours').toDate();
-
-          if (useCreationPopup) {
-              cal.openCreationPopup({
-                  start: start,
-                  end: end
-              });
-          }
-      }
-      function saveNewSchedule(scheduleData) {
-          var calendar = scheduleData.calendar || findCalendar(scheduleData.calendarId);
-          var schedule = {
-              id: String(chance.guid()),
-              title: scheduleData.title,
-              isAllDay: scheduleData.isAllDay,
-              start: scheduleData.start,
-              end: scheduleData.end,
-              category: scheduleData.isAllDay ? 'allday' : 'time',
-              dueDateClass: '',
-              color: calendar.color,
-              bgColor: calendar.bgColor,
-              dragBgColor: calendar.bgColor,
-              borderColor: calendar.borderColor,
-              raw: {
-                  'class': scheduleData.raw['class'],
-                  location: scheduleData.raw.location
+              calendarId: 1,
+              //id: +new Date(),
+              id: '',
+              date: {
+                menu: false,
+                val: moment(e.start.getTime()).format('YYYY-MM-DD')
               },
-              state: scheduleData.state
-          };
-          if (calendar) {
-              schedule.calendarId = calendar.id;
-              schedule.color = calendar.color;
-              schedule.bgColor = calendar.bgColor;
-              schedule.borderColor = calendar.borderColor;
-          }
+              time: {
+                menu: false,
+                val: moment(e.start.getTime()).format('HH:mm')
+              },
+            });
 
-          cal.createSchedules([schedule]);
+            self.guide = e.guide;
 
-          refreshScheduleVisibility();
-      }
+            // Show edition popup
+            self.modalEdit = true;
 
-      function onChangeCalendars(e) {
-          var calendarId = e.target.value;
-          var checked = e.target.checked;
-          var viewAll = document.querySelector('.lnb-calendars-item input');
-          var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
-          var allCheckedCalendars = true;
+            /* step1. open custom edit popup */
 
-          if (calendarId === 'all') {
-              allCheckedCalendars = checked;
+            /*const title = prompt('Schedule', '@suvrity\'s birthday');
+            var schedule = {
+                id: +new Date(),
+                title: title,
+                isAllDay: false,
+                start: e.start,
+                end: e.end,
+                category:  'time'
+            };*/
+            /* step2. save schedule */
+            //cal.createSchedules([schedule]);
+            /* step3. clear guide element */
+            //e.guide.clearGuideElement();
+        },
+        'beforeUpdateSchedule': function(e) {
+            console.log('beforeUpdateSchedule', e);
+            e.schedule.start = e.start;
+            e.schedule.end = e.end;
+            cal.updateSchedule(e.schedule.id, e.schedule.calendarId, e.schedule);
+        },
+        'beforeDeleteSchedule': function(e) {
+            console.log('beforeDeleteSchedule', e);
+            cal.deleteSchedule(e.schedule.id, e.schedule.calendarId);
+        },
+        'afterRenderSchedule': function(e) {
+            var schedule = e.schedule;
+            // var element = cal.getElement(schedule.id, schedule.calendarId);
+            // console.log('afterRenderSchedule', element);
+        }
+    });
 
-              calendarElements.forEach(function(input) {
-                  var span = input.parentNode;
-                  input.checked = checked;
-                  span.style.backgroundColor = checked ? span.style.borderColor : 'transparent';
-              });
+    /**
+     * Get time template for time and all-day
+     * @param {Schedule} schedule - schedule
+     * @param {boolean} isAllDay - isAllDay or hasMultiDates
+     * @returns {string}
+     */
+    function getTimeTemplate(schedule, isAllDay) {
+        var html = [];
+        var start = moment(schedule.start.toUTCString());
+        if (!isAllDay) {
+            html.push('<strong>' + start.format('HH:mm') + '</strong> ');
+        }
+        if (schedule.isPrivate) {
+            html.push('<span class="calendar-font-icon ic-lock-b"></span>');
+            html.push(' Private');
+        } else {
+            if (schedule.isReadOnly) {
+                html.push('<span class="calendar-font-icon ic-readonly-b"></span>');
+            } else if (schedule.recurrenceRule) {
+                html.push('<span class="calendar-font-icon ic-repeat-b"></span>');
+            } else if (schedule.attendees.length) {
+                html.push('<span class="calendar-font-icon ic-user-b"></span>');
+            } else if (schedule.location) {
+                html.push('<span class="calendar-font-icon ic-location-b"></span>');
+            }
+            html.push(' ' + schedule.title);
+        }
 
-              CalendarList.forEach(function(calendar) {
-                  calendar.checked = checked;
-              });
-          } else {
-              findCalendar(calendarId).checked = checked;
+        return html.join('');
+    }
 
-              allCheckedCalendars = calendarElements.every(function(input) {
-                  return input.checked;
-              });
+    /**
+     * A listener for click the menu
+     * @param {Event} e - click event
+     */
+    function onClickMenu(e) {
 
-              if (allCheckedCalendars) {
-                  viewAll.checked = true;
-              } else {
-                  viewAll.checked = false;
-              }
-          }
+        // Fix to close expanded menu
+        self.menu = false;
 
-          refreshScheduleVisibility();
-      }
+        var target = $(e.target).closest('a[role="menuitem"]')[0];
+        var action = getDataAction(target);
+        var options = cal.getOptions();
+        var viewName = '';
 
-      function refreshScheduleVisibility() {
-          var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
+        console.log(target);
+        console.log(action);
+        switch (action) {
+            case 'toggle-daily':
+                viewName = 'day';
+                break;
+            case 'toggle-weekly':
+                viewName = 'week';
+                break;
+            case 'toggle-monthly':
+                options.month.visibleWeeksCount = 0;
+                viewName = 'month';
+                break;
+            case 'toggle-weeks2':
+                options.month.visibleWeeksCount = 2;
+                viewName = 'month';
+                break;
+            case 'toggle-weeks3':
+                options.month.visibleWeeksCount = 3;
+                viewName = 'month';
+                break;
+            case 'toggle-narrow-weekend':
+                options.month.narrowWeekend = !options.month.narrowWeekend;
+                options.week.narrowWeekend = !options.week.narrowWeekend;
+                viewName = cal.getViewName();
 
-          CalendarList.forEach(function(calendar) {
-              cal.toggleSchedules(calendar.id, !calendar.checked, false);
-          });
+                target.querySelector('input').checked = options.month.narrowWeekend;
+                break;
+            case 'toggle-start-day-1':
+                options.month.startDayOfWeek = options.month.startDayOfWeek ? 0 : 1;
+                options.week.startDayOfWeek = options.week.startDayOfWeek ? 0 : 1;
+                viewName = cal.getViewName();
 
-          cal.render(true);
+                target.querySelector('input').checked = options.month.startDayOfWeek;
+                break;
+            case 'toggle-workweek':
+                options.month.workweek = !options.month.workweek;
+                options.week.workweek = !options.week.workweek;
+                viewName = cal.getViewName();
 
-          calendarElements.forEach(function(input) {
-              var span = input.nextElementSibling;
-              span.style.backgroundColor = input.checked ? span.style.borderColor : 'transparent';
-          });
-      }
+                target.querySelector('input').checked = !options.month.workweek;
+                break;
+            default:
+                break;
+        }
 
-      function setDropdownCalendarType() {
-          var calendarTypeName = document.getElementById('calendarTypeName');
-          var calendarTypeIcon = document.getElementById('calendarTypeIcon');
-          var options = cal.getOptions();
-          var type = cal.getViewName();
-          var iconClassName;
+        cal.setOptions(options, true);
+        cal.changeView(viewName, true);
 
-          if (type === 'day') {
-              type = 'Daily';
-              iconClassName = 'calendar-icon ic_view_day';
-          } else if (type === 'week') {
-              type = 'Weekly';
-              iconClassName = 'calendar-icon ic_view_week';
-          } else if (options.month.visibleWeeksCount === 2) {
-              type = '2 weeks';
-              iconClassName = 'calendar-icon ic_view_week';
-          } else if (options.month.visibleWeeksCount === 3) {
-              type = '3 weeks';
-              iconClassName = 'calendar-icon ic_view_week';
-          } else {
-              type = 'Monthly';
-              iconClassName = 'calendar-icon ic_view_month';
-          }
+        setDropdownCalendarType();
+        setRenderRangeText();
+        setSchedules();
+    }
 
-          calendarTypeName.innerHTML = type;
-          calendarTypeIcon.className = iconClassName;
-      }
+    function onClickNavi(e) {
+        var action = getDataAction(e.target);
 
-      function setRenderRangeText() {
-          var renderRange = document.getElementById('renderRange');
-          var options = cal.getOptions();
-          var viewName = cal.getViewName();
-          var html = [];
-          if (viewName === 'day') {
-              html.push(moment(cal.getDate().getTime()).format('YYYY.MM.DD'));
-          } else if (viewName === 'month' &&
-              (!options.month.visibleWeeksCount || options.month.visibleWeeksCount > 4)) {
-              html.push(moment(cal.getDate().getTime()).format('YYYY.MM'));
-          } else {
-              html.push(moment(cal.getDateRangeStart().getTime()).format('YYYY.MM.DD'));
-              html.push(' ~ ');
-              html.push(moment(cal.getDateRangeEnd().getTime()).format(' MM.DD'));
-          }
-          renderRange.innerHTML = html.join('');
-      }
+        switch (action) {
+            case 'move-prev':
+                cal.prev();
+                break;
+            case 'move-next':
+                cal.next();
+                break;
+            case 'move-today':
+                cal.today();
+                break;
+            default:
+                return;
+        }
 
-      function setSchedules() {
-          cal.clear();
-          generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
-          cal.createSchedules(ScheduleList);
-          refreshScheduleVisibility();
-      }
+        setRenderRangeText();
+        setSchedules();
+    }
 
-      function setEventListener() {
-          $('#menu-navi').on('click', onClickNavi);
-          $('.dropdown-menu a[role="menuitem"]').on('click', onClickMenu);
-          $('#lnb-calendars').on('change', onChangeCalendars);
+    function onNewSchedule() {
+        var title = $('#new-schedule-title').val();
+        var location = $('#new-schedule-location').val();
+        var isAllDay = document.getElementById('new-schedule-allday').checked;
+        var start = datePicker.getStartDate();
+        var end = datePicker.getEndDate();
+        var calendar = selectedCalendar ? selectedCalendar : CalendarList[0];
 
-          $('#btn-save-schedule').on('click', onNewSchedule);
-          $('#btn-new-schedule').on('click', createNewSchedule);
+        if (!title) {
+            return;
+        }
 
-          $('#dropdownMenu-calendars-list').on('click', onChangeNewScheduleCalendar);
+        cal.createSchedules([{
+            id: String(chance.guid()),
+            calendarId: calendar.id,
+            title: title,
+            isAllDay: isAllDay,
+            start: start,
+            end: end,
+            category: isAllDay ? 'allday' : 'time',
+            dueDateClass: '',
+            color: calendar.color,
+            bgColor: calendar.bgColor,
+            dragBgColor: calendar.bgColor,
+            borderColor: calendar.borderColor,
+            raw: {
+                location: location
+            },
+            state: 'Busy'
+        }]);
 
-          window.addEventListener('resize', resizeThrottled);
-      }
+        $('#modal-new-schedule').modal('hide');
+    }
 
-      function getDataAction(target) {
-          return target.dataset ? target.dataset.action : target.getAttribute('data-action');
-      }
+    function onChangeNewScheduleCalendar(e) {
+        var target = $(e.target).closest('a[role="menuitem"]')[0];
+        var calendarId = getDataAction(target);
+        changeNewScheduleCalendar(calendarId);
+    }
 
-      /*resizeThrottled = tui.util.throttle(function() {
-          cal.render();
-      }, 50);*/
+    function changeNewScheduleCalendar(calendarId) {
+        var calendarNameElement = document.getElementById('calendarName');
+        var calendar = findCalendar(calendarId);
+        var html = [];
 
-      window.cal = cal;
+        html.push('<span class="calendar-bar" style="background-color: ' + calendar.bgColor + '; border-color:' + calendar.borderColor + ';"></span>');
+        html.push('<span class="calendar-name">' + calendar.name + '</span>');
 
-      setDropdownCalendarType();
-      setRenderRangeText();
-      setSchedules();
-      setEventListener();
+        calendarNameElement.innerHTML = html.join('');
+
+        selectedCalendar = calendar;
+    }
+
+    function createNewSchedule(event) {
+        var start = event.start ? new Date(event.start.getTime()) : new Date();
+        var end = event.end ? new Date(event.end.getTime()) : moment().add(1, 'hours').toDate();
+
+        if (useCreationPopup) {
+            cal.openCreationPopup({
+                start: start,
+                end: end
+            });
+        }
+    }
+    function saveNewSchedule(scheduleData) {
+        var calendar = scheduleData.calendar || findCalendar(scheduleData.calendarId);
+        var schedule = {
+            id: String(chance.guid()),
+            title: scheduleData.title,
+            isAllDay: scheduleData.isAllDay,
+            start: scheduleData.start,
+            end: scheduleData.end,
+            category: scheduleData.isAllDay ? 'allday' : 'time',
+            dueDateClass: '',
+            color: calendar.color,
+            bgColor: calendar.bgColor,
+            dragBgColor: calendar.bgColor,
+            borderColor: calendar.borderColor,
+            raw: {
+                'class': scheduleData.raw['class'],
+                location: scheduleData.raw.location
+            },
+            state: scheduleData.state
+        };
+        if (calendar) {
+            schedule.calendarId = calendar.id;
+            schedule.color = calendar.color;
+            schedule.bgColor = calendar.bgColor;
+            schedule.borderColor = calendar.borderColor;
+        }
+
+        cal.createSchedules([schedule]);
+
+        refreshScheduleVisibility();
+    }
+
+    function onChangeCalendars(e) {
+        var calendarId = e.target.value;
+        var checked = e.target.checked;
+        var viewAll = document.querySelector('.lnb-calendars-item input');
+        var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
+        var allCheckedCalendars = true;
+
+        if (calendarId === 'all') {
+            allCheckedCalendars = checked;
+
+            calendarElements.forEach(function(input) {
+                var span = input.parentNode;
+                input.checked = checked;
+                span.style.backgroundColor = checked ? span.style.borderColor : 'transparent';
+            });
+
+            CalendarList.forEach(function(calendar) {
+                calendar.checked = checked;
+            });
+        } else {
+            findCalendar(calendarId).checked = checked;
+
+            allCheckedCalendars = calendarElements.every(function(input) {
+                return input.checked;
+            });
+
+            if (allCheckedCalendars) {
+                viewAll.checked = true;
+            } else {
+                viewAll.checked = false;
+            }
+        }
+
+        refreshScheduleVisibility();
+    }
+
+    function refreshScheduleVisibility() {
+        var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
+
+        CalendarList.forEach(function(calendar) {
+            cal.toggleSchedules(calendar.id, !calendar.checked, false);
+        });
+
+        cal.render(true);
+
+        calendarElements.forEach(function(input) {
+            var span = input.nextElementSibling;
+            span.style.backgroundColor = input.checked ? span.style.borderColor : 'transparent';
+        });
+    }
+
+    function setDropdownCalendarType() {
+        var calendarTypeName = document.getElementById('calendarTypeName');
+        var calendarTypeIcon = document.getElementById('calendarTypeIcon');
+        var options = cal.getOptions();
+        var type = cal.getViewName();
+        var iconClassName;
+
+        if (type === 'day') {
+            type = 'Daily';
+            iconClassName = 'view_day';
+        } else if (type === 'week') {
+            type = 'Weekly';
+            iconClassName = 'view_week';
+        } else if (options.month.visibleWeeksCount === 2) {
+            type = '2 weeks';
+            iconClassName = 'view_week';
+        } else if (options.month.visibleWeeksCount === 3) {
+            type = '3 weeks';
+            iconClassName = 'view_week';
+        } else {
+            type = 'Month';
+            iconClassName = 'view_module';
+        }
+
+        calendarTypeName.innerHTML = type;
+        calendarTypeIcon.innerHTML = iconClassName;
+    }
+
+    function setRenderRangeText() {
+        var renderRange = document.getElementById('renderRange');
+        var options = cal.getOptions();
+        var viewName = cal.getViewName();
+        var html = [];
+        if (viewName === 'day') {
+            html.push(moment(cal.getDate().getTime()).format('YYYY.MM.DD'));
+        } else if (viewName === 'month' &&
+            (!options.month.visibleWeeksCount || options.month.visibleWeeksCount > 4)) {
+            html.push(moment(cal.getDate().getTime()).format('YYYY.MM'));
+        } else {
+            html.push(moment(cal.getDateRangeStart().getTime()).format('YYYY.MM.DD'));
+            html.push(' ~ ');
+            html.push(moment(cal.getDateRangeEnd().getTime()).format(' MM.DD'));
+        }
+        renderRange.innerHTML = html.join('');
+    }
+
+    function setSchedules() {
+        cal.clear();
+        generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
+        cal.createSchedules(ScheduleList);
+        refreshScheduleVisibility();
+    }
+
+    function setEventListener() {
+        $('#menu-navi').on('click', onClickNavi);
+        /*$('.dropdown-menu a[role="menuitem"]').on('click', onClickMenu);*/
+
+        // Fix to dropdown
+        $('#dropdown_menu .v-list__tile').on('click', onClickMenu);
+        $('#lnb-calendars').on('change', onChangeCalendars);
+
+        $('#btn-save-schedule').on('click', onNewSchedule);
+        $('#btn-new-schedule').on('click', createNewSchedule);
+
+        $('#dropdownMenu-calendars-list').on('click', onChangeNewScheduleCalendar);
+
+        window.addEventListener('resize', resizeThrottled);
+    }
+
+    function getDataAction(target) {
+        return target.dataset ? target.dataset.action : target.getAttribute('data-action');
+    }
+
+    /*resizeThrottled = tui.util.throttle(function() {
+        cal.render();
+    }, 50);*/
+
+    window.cal = cal;
+
+    // Fix to "Today" button
+    $("#menu-navi").find("button[data-action='move-today']").children(".v-btn__content").attr('data-action', 'move-today');
+
+    setDropdownCalendarType();
+    setRenderRangeText();
+    setSchedules();
+    setEventListener();
 
     // set calendars
     (function() {
@@ -790,7 +1099,7 @@ export default {
         });
         calendarList.innerHTML = html.join('\n');
     })();
-    }
+  }
 }
 </script>
 
