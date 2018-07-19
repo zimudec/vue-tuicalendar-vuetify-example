@@ -78,7 +78,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" flat @click.stop="modalEdit = false">Close</v-btn>
+          <v-btn color="blue darken-1" flat @click.stop="scheduleCancel">Close</v-btn>
           <v-btn color="blue darken-1" flat @click.stop="scheduleSave">Save</v-btn>
         </v-card-actions>
       </v-card>
@@ -306,6 +306,13 @@ export default {
 
       // Close details popup
       this.modalDetail = false;
+    },
+    scheduleCancel: function(){
+      // Close edition popup
+      this.modalEdit = false
+
+      // Clear selection
+      this.guide.clearGuideElement();
     },
     scheduleDelete: function(){
 
