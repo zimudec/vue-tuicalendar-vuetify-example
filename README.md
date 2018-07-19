@@ -34,17 +34,13 @@ jQuery is a lightweight, "write less, do more", JavaScript library.
 
 A progressive, incrementally-adoptable JavaScript framework for building UI on the web.
 
+### [Vuetify](https://github.com/vuetifyjs/vuetify)
+
+Material Component Framework for Vue.js 2.
+
 ### [Tui Calendar](https://github.com/nhnent/tui.calendar)
 
 A JavaScript schedule calendar that is full featured.
-
-### [Tui Date Picker](https://github.com/nhnent/tui.date-picker)
-
-Component that selects specific date.
-
-### [Tui Time Picker](https://github.com/nhnent/tui.time-picker)
-
-Component that selects specific time.
 
 ### [Moment](https://github.com/moment/moment)
 
